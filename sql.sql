@@ -17,6 +17,7 @@ create table bbcl_dwh
    post_year            int,
    post_month           int,
    author_name          varchar(150),
+   author_display_name  varchar(150),
    categories           text,
    categories_slugs     text,
    categories_ids       text,
@@ -44,6 +45,7 @@ INSERT INTO bbcl_dwh (
         post_year,
         post_month,
         author_name,
+        author_display_name,
         categories,
         categories_slugs,
         categories_ids,
@@ -69,6 +71,7 @@ SELECT  P.ID,
         DATE_FORMAT(P.post_date,'%Y') AS 'post_year',
         DATE_FORMAT(P.post_date,'%m') AS 'post_month',
         A.user_nicename AS 'author_name',
+        A.display_name AS 'author_display_name',
         (
           SELECT CONCAT('["',group_concat( T.name separator  '","'),'"]')
           FROM wp_terms T 
@@ -148,8 +151,6 @@ SELECT  P.ID,
 FROM  wp_users A 
   INNER JOIN wp_posts P 
     ON P.post_author = A.ID
-  LEFT JOIN contadorvisitas C
-    ON P.ID = C.idnoticia 
 WHERE P.post_status='publish' 
   AND P.post_type='post'
 ORDER BY P.post_date ASC;
@@ -157,7 +158,9 @@ ORDER BY P.post_date ASC;
 
 CREATE INDEX dwh_year ON bbcl_dwh (post_year);
 CREATE INDEX dwh_month ON bbcl_dwh (post_month);
-
+ALTER TABLE  bbcl_dwh ADD FULLTEXT  `title_text` (
+`post_title`
+)
 
 
 
@@ -181,6 +184,7 @@ FOR EACH ROW BEGIN
             post_year,
             post_month,
             author_name,
+            author_display_name,
             categories,
             categories_slugs,
             categories_ids,
@@ -211,6 +215,7 @@ FOR EACH ROW BEGIN
             DATE_FORMAT(P.post_date,'%Y') AS 'post_year',
             DATE_FORMAT(P.post_date,'%m') AS 'post_month',
             A.user_nicename AS 'author_name',
+            A.display_name AS 'author_display_name',
             (
               SELECT CONCAT('["',group_concat( T.name separator  '","'),'"]')
               FROM wp_terms T 
@@ -561,3 +566,7 @@ FOR EACH ROW BEGIN
 END
 |
 DELIMITER ;
+
+
+
+
